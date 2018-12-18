@@ -24,6 +24,8 @@
 import base64
 import requests
 import html
+import logging
+import json
 
 LOGIN_BASE_URI = 'https://espace-client-connexion.enedis.fr'
 API_BASE_URI = 'https://espace-client-particuliers.enedis.fr/group/espace-particuliers'
@@ -44,8 +46,8 @@ class LinkyServiceException(Exception):
     pass
 
 def login(username, password):
-    """Logs the user into the Linky API.
-    """
+    logging.info("Logs the user into the Linky API.")
+
     session = requests.Session()
 
     payload = {'IDToken1': username,
@@ -54,9 +56,11 @@ def login(username, password):
                'encoded': 'true',
                'gx_charset': 'UTF-8'}
 
+    #logging.info("SunQueryParamsString" + payload["SunQueryParamsString"])
+    print(payload["SunQueryParamsString"])
     req = session.post(LOGIN_BASE_URI + API_ENDPOINT_LOGIN, data=payload, allow_redirects=False)
 
-    session_cookie = req.cookies.get('iPlanetDirectoryPro')
+    # session_cookie = req.cookies.get('iPlanetDirectoryPro')
 
     if not 'iPlanetDirectoryPro' in session.cookies:
         raise LinkyLoginException("Login unsuccessful. Check your credentials.")
@@ -115,7 +119,7 @@ def _get_data(session, resource_id, start_date=None, end_date=None):
 
     res = req.json()
 
-    if res['etat'] and res['etat']['valeur'] == 'erreur' and res['etat']['erreurText']:
-        raise LinkyServiceException(html.unescape(res['etat']['erreurText']))
+    if res['etat'] and res['etat']['valeur'] == 'erreur': # and res['etat']['erreurText']
+        raise LinkyServiceException(html.unescape(res['etat']['valeur'])) # res['etat']['erreurText']
 
     return res
